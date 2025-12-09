@@ -20,6 +20,7 @@ use Symfony\Component\PropertyInfo\Extractor\PhpStanExtractor;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\Clazz;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\ConstructorDummy;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\ConstructorDummyWithoutDocBlock;
+use Symfony\Component\PropertyInfo\Tests\Fixtures\ConstructorDummyWithVarTagsDocBlock;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\DefaultValue;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\DockBlockFallback;
 use Symfony\Component\PropertyInfo\Tests\Fixtures\Dummy;
@@ -873,6 +874,12 @@ class PhpStanExtractorTest extends TestCase
         $this->assertEquals($type, $this->extractor->getTypeFromConstructor(ConstructorDummy::class, $property));
     }
 
+    #[DataProvider('constructorTypesWithOnlyVarTagsProvider')]
+    public function testExtractConstructorTypesWithOnlyVarTags(string $property, ?Type $type)
+    {
+        $this->assertEquals($type, $this->extractor->getTypeFromConstructor(ConstructorDummyWithVarTagsDocBlock::class, $property));
+    }
+
     #[DataProvider('constructorTypesProvider')]
     public function testExtractConstructorTypesReturnNullOnEmptyDocBlock(string $property, ?Type $type)
     {
@@ -887,8 +894,21 @@ class PhpStanExtractorTest extends TestCase
         yield ['date', Type::int()];
         yield ['timezone', Type::object(\DateTimeZone::class)];
         yield ['dateObject', Type::object(\DateTimeInterface::class)];
-        yield ['dateTime', null];
+        yield ['dateTime', Type::int()];
         yield ['ddd', null];
+    }
+
+    /**
+     * @return iterable<array{0: string, 1: ?Type}>
+     */
+    public static function constructorTypesWithOnlyVarTagsProvider(): iterable
+    {
+        yield ['date', Type::int()];
+        yield ['dateObject', Type::object(\DateTimeInterface::class)];
+        yield ['objectsArray', Type::array(Type::object(ConstructorDummy::class))];
+        yield ['dateTime', null];
+        yield ['mixed', null];
+        yield ['timezone', null];
     }
 
     #[DataProvider('constructorTypesOfParentClassProvider')]
